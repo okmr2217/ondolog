@@ -2,6 +2,7 @@ import type { devices } from "./db/schema";
 
 export type Bindings = {
   DB: D1Database;
+  ASSETS: Fetcher;
   MISSING_DATA_THRESHOLD_MINUTES: string;
   ALERT_COOLDOWN_MINUTES: string;
   ALERT_EMAIL_TO: string;
