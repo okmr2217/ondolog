@@ -7,3 +7,17 @@ export const measurementInputSchema = z.object({
 });
 
 export type MeasurementInput = z.infer<typeof measurementInputSchema>;
+
+export const deviceInputSchema = z.object({
+  name: z.string().trim().min(1, "デバイス名は必須です"),
+});
+
+export type DeviceInput = z.infer<typeof deviceInputSchema>;
+
+export const measurementsQuerySchema = z.object({
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional(),
+  deviceId: z.string().optional(),
+});
+
+export type MeasurementsQuery = z.infer<typeof measurementsQuerySchema>;
