@@ -43,64 +43,70 @@ APIサーバー（Hono）とWebアプリ（Vite + React）を **単一のCloudfl
 
 ### 2.3 プロジェクト構成（確定）
 
+モノレポ構成とし、`apps/`配下にAPI（Hono）とWeb（Vite+React）をまとめて単一Workerとしてデプロイする。`apps/`直下がWorker本体（package.json・wrangler.jsonc・drizzle.config.ts）、`apps/web/`はビルドツール用に独立したpackage.jsonを持つサブパッケージとし、Workerのstatic assetsは`apps/web/dist`を参照する。
+
 ```
 ondolog/
-├── src/
-│   ├── index.ts               # Honoアプリのエントリーポイント（fetch, scheduledをexport）
-│   ├── routes/
-│   │   ├── measurements.ts    # POST /api/devices/:deviceId/measurements
-│   │   │                      # GET  /api/measurements
-│   │   │                      # GET  /api/measurements/latest
-│   │   ├── devices.ts         # GET/POST /api/devices, DELETE /api/devices/:id
-│   │   └── healthz.ts         # GET /api/healthz
-│   ├── middleware/
-│   │   └── apiKeyAuth.ts      # X-API-Keyヘッダー検証 → api_key_hashと照合するミドルウェア
-│   ├── db/
-│   │   ├── schema.ts          # Drizzle ORM スキーマ定義
-│   │   └── client.ts          # D1バインディング経由の接続
-│   ├── lib/
-│   │   ├── alert.ts           # 欠損判定・クールダウン判定ロジック
-│   │   ├── resend.ts          # Resend送信ラッパー
-│   │   ├── validation.ts      # zodによるリクエストバリデーション定義
-│   │   └── apiKey.ts          # APIキー生成（crypto.randomBytes）・SHA-256ハッシュ化
-│   └── cron.ts                # Cron Triggerハンドラ本体（10分毎に欠損チェック→alert.ts呼び出し）
-├── web/
+├── apps/
 │   ├── src/
+│   │   ├── index.ts               # Honoアプリのエントリーポイント（fetch, scheduledをexport）
 │   │   ├── routes/
-│   │   │   ├── index.tsx          # "/" デバイス一覧
-│   │   │   ├── devices.$id.tsx    # "/devices/:id" デバイス詳細
-│   │   │   └── admin.devices.tsx  # "/admin/devices" デバイス管理
-│   │   ├── components/
-│   │   │   ├── layout/
-│   │   │   │   ├── bottom-nav.tsx      # モバイル用ナビ（モバイル表示のみ）
-│   │   │   │   ├── sidebar.tsx         # PC用ナビ（PC表示のみ）
-│   │   │   │   └── mobile-header.tsx   # モバイル用ヘッダー（モバイル表示のみ）
-│   │   │   ├── ui/                     # shadcn/uiコンポーネント
-│   │   │   ├── device-card.tsx         # 一覧のカード（温湿度・状態・最終受信時刻）
-│   │   │   ├── device-chart.tsx        # shadcnのchart（24h/7d/30d切り替え、異常値ハイライト）
-│   │   │   └── api-key-display.tsx     # 発行時一度だけ表示するAPIキー表示
+│   │   │   ├── measurements.ts    # POST /api/devices/:deviceId/measurements
+│   │   │   │                      # GET  /api/measurements
+│   │   │   │                      # GET  /api/measurements/latest
+│   │   │   ├── devices.ts         # GET/POST /api/devices, DELETE /api/devices/:id
+│   │   │   └── healthz.ts         # GET /api/healthz
+│   │   ├── middleware/
+│   │   │   └── apiKeyAuth.ts      # X-API-Keyヘッダー検証 → api_key_hashと照合するミドルウェア
+│   │   ├── db/
+│   │   │   ├── schema.ts          # Drizzle ORM スキーマ定義
+│   │   │   └── client.ts          # D1バインディング経由の接続
 │   │   ├── lib/
-│   │   │   └── api.ts              # /api/* へのfetchラッパー（同一オリジンなのでbaseURL不要）
-│   │   └── main.tsx
-│   └── vite.config.ts
-├── drizzle/                    # drizzle-kit generateで出力されるマイグレーションSQL
-├── drizzle.config.ts           # drizzle-kit設定（schema.ts参照、dialect: "sqlite"）
+│   │   │   ├── alert.ts           # 欠損判定・クールダウン判定ロジック
+│   │   │   ├── resend.ts          # Resend送信ラッパー
+│   │   │   ├── validation.ts      # zodによるリクエストバリデーション定義
+│   │   │   └── apiKey.ts          # APIキー生成（crypto.randomBytes）・SHA-256ハッシュ化
+│   │   └── cron.ts                # Cron Triggerハンドラ本体（10分毎に欠損チェック→alert.ts呼び出し）
+│   ├── web/                       # Vite+React（独立したpackage.json、ビルド成果物はweb/dist）
+│   │   ├── src/
+│   │   │   ├── routes/
+│   │   │   │   ├── index.tsx          # "/" デバイス一覧
+│   │   │   │   ├── devices.$id.tsx    # "/devices/:id" デバイス詳細
+│   │   │   │   └── admin.devices.tsx  # "/admin/devices" デバイス管理
+│   │   │   ├── components/
+│   │   │   │   ├── layout/
+│   │   │   │   │   ├── bottom-nav.tsx      # モバイル用ナビ（モバイル表示のみ）
+│   │   │   │   │   ├── sidebar.tsx         # PC用ナビ（PC表示のみ）
+│   │   │   │   │   └── mobile-header.tsx   # モバイル用ヘッダー（モバイル表示のみ）
+│   │   │   │   ├── ui/                     # shadcn/uiコンポーネント
+│   │   │   │   ├── device-card.tsx         # 一覧のカード（温湿度・状態・最終受信時刻）
+│   │   │   │   ├── device-chart.tsx        # shadcnのchart（24h/7d/30d切り替え、異常値ハイライト）
+│   │   │   │   └── api-key-display.tsx     # 発行時一度だけ表示するAPIキー表示
+│   │   │   ├── lib/
+│   │   │   │   └── api.ts              # /api/* へのfetchラッパー（同一オリジンなのでbaseURL不要）
+│   │   │   └── main.tsx
+│   │   ├── package.json
+│   │   └── vite.config.ts
+│   ├── drizzle/                   # drizzle-kit generateで出力されるマイグレーションSQL
+│   ├── drizzle.config.ts          # drizzle-kit設定（schema.ts参照、dialect: "sqlite"）
+│   ├── package.json                # Worker本体（Hono, drizzle-orm, wrangler等）
+│   └── wrangler.jsonc
 ├── docs/                       # 設計・要件ドキュメント一式（本書、requirements、device_spec）
 ├── CLAUDE.md                   # 実装時の確定事項サマリ（Claude Code引き継ぎ用）
-└── wrangler.jsonc
+└── README.md
 ```
 
 - コンポーネントのファイル名はkebab-caseで統一する（例: `bottom-nav.tsx`）。PascalCaseは使わない。
 
 ```jsonc
-// wrangler.jsonc（イメージ）
+// apps/wrangler.jsonc（イメージ）
 {
   "name": "ondolog",
   "main": "src/index.ts",
   "compatibility_date": "2026-06-20",
   "routes": [{ "pattern": "ondolog.paritto.dev", "custom_domain": true }],
   "assets": {
-    "directory": "./dist",
+    "directory": "./web/dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application"
   },
@@ -208,7 +214,7 @@ ondolog/
 
 ## 6. データモデル
 
-### 6.1 Drizzle ORM スキーマ（`src/db/schema.ts`）
+### 6.1 Drizzle ORM スキーマ（`apps/src/db/schema.ts`）
 
 ```typescript
 import {
@@ -307,7 +313,7 @@ export const alertStateRelations = relations(alertState, ({ one }) => ({
 }));
 ```
 
-### 6.2 DB接続（`src/db/client.ts`）
+### 6.2 DB接続（`apps/src/db/client.ts`）
 
 Hyperdriveや接続文字列の管理が不要になり、D1バインディングをそのまま渡すだけになる。
 
@@ -393,15 +399,15 @@ Resend APIキーなど機密情報は引き続き `wrangler secret put` でsecre
 
 ## 8. Claude Codeへの引き継ぎ方針
 
-- 本書・`OndoLog_requirements.md`・`OndoLog_device_spec.md`・`schema.ts`を`docs/`配下に事前配置し、実装前にコミットしておく
+- 本書・`OndoLog_requirements.md`・`OndoLog_device_spec.md`を`docs/`配下に事前配置し、実装前にコミットしておく
 - プロジェクトルートに`CLAUDE.md`を置き、確定済み設計判断（単一Worker構成、DBはCloudflare D1、論理削除、`real`型、APIキーのSHA-256ハッシュ化など）を短くまとめる
 - 実装は一括発注せず、以下の順でレイヤーごとに区切って依頼し、都度レビューする
-  1. `db/schema.ts` + `drizzle.config.ts` → マイグレーション生成確認
-  2. `middleware/apiKeyAuth.ts`
-  3. `routes/measurements.ts`のPOST
-  4. `routes/devices.ts` / `measurements.ts`のGET系
-  5. `cron.ts` + `lib/alert.ts`
-  6. Webアプリ側
+  1. `apps/src/db/schema.ts` + `apps/drizzle.config.ts` → マイグレーション生成確認（完了）
+  2. `apps/src/middleware/apiKeyAuth.ts`
+  3. `apps/src/routes/measurements.ts`のPOST
+  4. `apps/src/routes/devices.ts` / `measurements.ts`のGET系
+  5. `apps/src/cron.ts` + `apps/src/lib/alert.ts`
+  6. Webアプリ側（`apps/web/`）
 
 ## 9. 今後の検討事項
 
