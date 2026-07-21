@@ -2,18 +2,21 @@
 
 ## 1. 概要
 
-本書はXIAO ESP32C3 + SHT40Iで構成するセンサーデバイス側の**ソフトウェア（ファームウェア）設計**に絞って記載する。
+本書はESP32系ボード + SHT40Iで構成するセンサーデバイス側の**ソフトウェア（ファームウェア）設計**に絞って記載する。
 
 - ハードウェア仕様（センサー、自己発熱対策、電源設計、筐体計画）は `OndoLog_device_spec.md` を参照
 - APIの仕様（エンドポイント、認証方式、バリデーション）は `OndoLog_software_design.md` の5章を参照。本書はそのAPIクライアントとしての実装設計にあたる
 
 | 項目 | 内容 |
 |---|---|
-| 対象ボード | Seeed Studio XIAO ESP32C3 |
+| 対象ボード（プロトタイピング段階・確定） | ESP32-S3-DevKitC-1-N8R8（ESP32-S3-WROOM-1-N8R8モジュール搭載） |
+| 対象ボード（量産時） | Seeed Studio XIAO ESP32C3（`OndoLog_device_spec.md`記載の小型筐体前提。移行時の差分は8章参照） |
 | センサー | SHT40I使用モジュール（秋月電子 AE-SHT40I-AD1F-R2-SIP4、I2C接続） |
 | 開発環境 | PlatformIO + VSCode（Arduino framework） |
 | 計測間隔 | 10分（常時給電、deep sleepは使用しない。バッテリー駆動・省電力設計はスコープ外） |
 | 通信 | WiFi経由でHTTPS POST |
+
+**プロトタイピング段階でのボード変更について（確定）**: 配線・動作検証のしやすさを優先し、まずはブレッドボード向けの開発ボードであるESP32-S3-DevKitC-1-N8R8で実装・検証する。量産・最終筐体化のタイミングでXIAO ESP32C3へ移行する（`OndoLog_device_spec.md` 5章の試作・量産計画と対応）。センサー・API通信仕様（4〜7章）はボードに依存しないため、移行時もそのまま流用できる。ボード依存部分（I2Cピン、`platformio.ini`の`board`指定）のみ移行時に見直しが必要（8章参照）。
 
 ## 2. プロジェクト構成（確定）
 
@@ -37,9 +40,9 @@ firmware/
 ### 2.1 `platformio.ini`（イメージ）
 
 ```ini
-[env:seeed_xiao_esp32c3]
+[env:esp32-s3-devkitc-1]
 platform = espressif32
-board = seeed_xiao_esp32c3
+board = esp32-s3-devkitc-1
 framework = arduino
 monitor_speed = 115200
 
@@ -53,7 +56,9 @@ build_flags =
 
 ### 2.2 I2C接続（確定）
 
-XIAO ESP32C3のデフォルトI2Cピン（`Wire.begin()`のデフォルト、SDA/SCL）にSHT40Iモジュールを接続する。ピン変更の必要がないため、`Wire.begin(SDA, SCL)`への明示的なピン指定は行わない。
+ESP32-S3-DevKitC-1のデフォルトI2Cピン（`Wire.begin()`のデフォルト、GPIO8=SDA / GPIO9=SCL）にSHT40Iモジュールを接続する。ピン変更の必要がないため、`Wire.begin(SDA, SCL)`への明示的なピン指定は行わない（N8R8の内蔵Octal PSRAM/フラッシュが使用するGPIO26-37とは競合しない）。
+
+量産時にXIAO ESP32C3へ移行する場合、XIAO側のデフォルトI2Cピンは異なる番号になるため、配線・`Wire.begin()`呼び出しの見直しが必要（8章参照）。
 
 ## 3. 認証情報の管理方針（確定）
 
@@ -173,6 +178,7 @@ include/secrets.h
 
 ## 8. 今後の検討事項
 
+- **XIAO ESP32C3への移行**（量産・最終筐体化のタイミング）: `platformio.ini`の`board`指定変更（`seeed_xiao_esp32c3`）、I2Cピン配線・`Wire.begin()`呼び出しの見直しが必要。センサー・API通信・認証情報管理などその他の設計はボードに依存しないためそのまま流用可能
 - センサー初期化失敗時の自動再起動以外に、WiFi接続が長時間（例: 1時間相当＝6サイクル連続）失敗し続けた場合の`ESP.restart()`によるセルフリカバリ導入（WiFiスタックの想定外のフリーズ対策。現状は未実装、運用状況を見て要否判断）
 - OTA（Over-The-Air）ファームウェア更新の要否（現状はUSB経由の書き込みのみ想定）
 - 複数デバイス展開時のビルド・書き込み運用の効率化（`secrets.h`の一括生成スクリプト等）
