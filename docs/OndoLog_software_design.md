@@ -128,6 +128,7 @@ ondolog/
 | APIフレームワーク | Hono |
 | 実行環境 | Cloudflare Workers |
 | フロントエンド | Vite + React |
+| ルーティング | TanStack Router |
 | UIライブラリ | shadcn/ui |
 | チャート | shadcnのchartコンポーネント（Recharts） |
 | ORM | Drizzle ORM |
