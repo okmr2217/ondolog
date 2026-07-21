@@ -2,6 +2,11 @@ import type { devices } from "./db/schema";
 
 export type Bindings = {
   DB: D1Database;
+  MISSING_DATA_THRESHOLD_MINUTES: string;
+  ALERT_COOLDOWN_MINUTES: string;
+  ALERT_EMAIL_TO: string;
+  ALERT_EMAIL_FROM: string;
+  RESEND_API_KEY: string;
 };
 
 export type Variables = {
