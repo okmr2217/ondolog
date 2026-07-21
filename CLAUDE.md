@@ -23,4 +23,5 @@ ondolog/
 
 ## 詳細設計
 docs/OndoLog_software_design.md を参照
+docs/OndoLog_firmware_design.md を参照
 docs/OndoLog_requirements.md を参照
