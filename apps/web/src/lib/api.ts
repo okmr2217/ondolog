@@ -60,6 +60,17 @@ export function getLatestMeasurements(): Promise<LatestMeasurement[]> {
   return request<LatestMeasurement[]>("/measurements/latest");
 }
 
+export interface MeasurementsQuery {
+  deviceId: string;
+  from: string;
+  to: string;
+}
+
+export function getMeasurements({ deviceId, from, to }: MeasurementsQuery): Promise<Measurement[]> {
+  const params = new URLSearchParams({ deviceId, from, to });
+  return request<Measurement[]>(`/measurements?${params.toString()}`);
+}
+
 export function createDevice(name: string): Promise<CreatedDevice> {
   return request<CreatedDevice>("/devices", {
     method: "POST",
