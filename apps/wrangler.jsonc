@@ -21,7 +21,7 @@
     "MISSING_DATA_THRESHOLD_MINUTES": "30",
     "ALERT_COOLDOWN_MINUTES": "60",
     "ALERT_EMAIL_TO": "okumuradaichi2007@gmail.com",
-    "ALERT_EMAIL_FROM": "alerts@ondolog.paritto.dev"
+    "ALERT_EMAIL_FROM": "ondolog@paritto.dev"
   }
   // RESEND_API_KEYは機密情報のため`wrangler secret put RESEND_API_KEY`で設定する（vars直書き禁止）
 }
