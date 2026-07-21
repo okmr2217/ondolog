@@ -1,4 +1,6 @@
-const API_BASE = "/api";
+import axios, { type AxiosResponse } from "axios";
+
+const client = axios.create({ baseURL: "/api" });
 
 export type FieldErrors = Record<string, string[]>;
 
@@ -18,13 +20,19 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, init);
-  if (!res.ok) {
-    const body: ErrorBody | null = await res.json().catch(() => null);
-    throw new ApiError(res.status, body?.error ?? `${res.status} ${res.statusText}`, body?.fieldErrors);
+function toApiError(err: unknown): ApiError {
+  if (axios.isAxiosError<ErrorBody>(err)) {
+    return new ApiError(err.response?.status ?? 0, err.response?.data?.error ?? err.message, err.response?.data?.fieldErrors);
   }
-  return res.json() as Promise<T>;
+  return new ApiError(0, err instanceof Error ? err.message : "不明なエラーが発生しました");
+}
+
+async function unwrap<T>(response: Promise<AxiosResponse<T>>): Promise<T> {
+  try {
+    return (await response).data;
+  } catch (err) {
+    throw toApiError(err);
+  }
 }
 
 export interface Device {
@@ -53,11 +61,11 @@ export interface LatestMeasurement {
 }
 
 export function getDevices(): Promise<Device[]> {
-  return request<Device[]>("/devices");
+  return unwrap(client.get<Device[]>("/devices"));
 }
 
 export function getLatestMeasurements(): Promise<LatestMeasurement[]> {
-  return request<LatestMeasurement[]>("/measurements/latest");
+  return unwrap(client.get<LatestMeasurement[]>("/measurements/latest"));
 }
 
 export interface MeasurementsQuery {
@@ -66,19 +74,14 @@ export interface MeasurementsQuery {
   to: string;
 }
 
-export function getMeasurements({ deviceId, from, to }: MeasurementsQuery): Promise<Measurement[]> {
-  const params = new URLSearchParams({ deviceId, from, to });
-  return request<Measurement[]>(`/measurements?${params.toString()}`);
+export function getMeasurements(params: MeasurementsQuery): Promise<Measurement[]> {
+  return unwrap(client.get<Measurement[]>("/measurements", { params }));
 }
 
 export function createDevice(name: string): Promise<CreatedDevice> {
-  return request<CreatedDevice>("/devices", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name }),
-  });
+  return unwrap(client.post<CreatedDevice>("/devices", { name }));
 }
 
 export function deleteDevice(id: string): Promise<Device> {
-  return request<Device>(`/devices/${id}`, { method: "DELETE" });
+  return unwrap(client.delete<Device>(`/devices/${id}`));
 }
