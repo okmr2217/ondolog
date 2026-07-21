@@ -71,12 +71,14 @@ ondolog/
 │   │   │   ├── devices.$id.tsx    # "/devices/:id" デバイス詳細
 │   │   │   └── admin.devices.tsx  # "/admin/devices" デバイス管理
 │   │   ├── components/
-│   │   │   ├── nav/
-│   │   │   │   ├── BottomBar.tsx   # モバイル用ナビ
-│   │   │   │   └── Sidebar.tsx     # PC用ナビ
-│   │   │   ├── DeviceCard.tsx      # 一覧のカード（温湿度・状態・最終受信時刻）
-│   │   │   ├── DeviceChart.tsx     # shadcn chart（24h/7d/30d切り替え、異常値ハイライト）
-│   │   │   └── ApiKeyDisplay.tsx   # 発行時一度だけ表示するAPIキー表示
+│   │   │   ├── layout/
+│   │   │   │   ├── bottom-nav.tsx      # モバイル用ナビ（モバイル表示のみ）
+│   │   │   │   ├── sidebar.tsx         # PC用ナビ（PC表示のみ）
+│   │   │   │   └── mobile-header.tsx   # モバイル用ヘッダー（モバイル表示のみ）
+│   │   │   ├── ui/                     # shadcn/uiコンポーネント
+│   │   │   ├── device-card.tsx         # 一覧のカード（温湿度・状態・最終受信時刻）
+│   │   │   ├── device-chart.tsx        # shadcnのchart（24h/7d/30d切り替え、異常値ハイライト）
+│   │   │   └── api-key-display.tsx     # 発行時一度だけ表示するAPIキー表示
 │   │   ├── lib/
 │   │   │   └── api.ts              # /api/* へのfetchラッパー（同一オリジンなのでbaseURL不要）
 │   │   └── main.tsx
@@ -87,6 +89,8 @@ ondolog/
 ├── CLAUDE.md                   # 実装時の確定事項サマリ（Claude Code引き継ぎ用）
 └── wrangler.jsonc
 ```
+
+- コンポーネントのファイル名はkebab-caseで統一する（例: `bottom-nav.tsx`）。PascalCaseは使わない。
 
 ```jsonc
 // wrangler.jsonc（イメージ）
@@ -140,8 +144,8 @@ ondolog/
 
 ### 4.2 ナビゲーション（確定）
 
-- **モバイル表示**：画面下部のbottom barでナビゲーション
-- **PC表示**：sidebarでナビゲーション
+- **モバイル表示**：画面下部のbottom bar（`bottom-nav.tsx`）でナビゲーション。画面上部のヘッダー（`mobile-header.tsx`）もモバイル表示時のみ表示する
+- **PC表示**：sidebar（`sidebar.tsx`）でナビゲーション
 - shadcn/uiのコンポーネントをベースに、レスポンシブで両方を出し分ける
 
 ### 4.3 デバイス一覧画面（確定）

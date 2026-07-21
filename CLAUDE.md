@@ -8,6 +8,7 @@
 - alert_typeは"missing_data"のみ実装。"abnormal_value"は実装しない。
 - 温湿度カラムは`real`型。`numeric`は使わない。
 - 欠損判定30分・クールダウン1時間は`wrangler.jsonc`のvarsに直書き。ダッシュボードから変更しない前提。
+- Webのコンポーネントファイル名はkebab-caseで統一する（例: `bottom-nav.tsx`）。PascalCaseは使わない。
 
 ## プロジェクト構成
 モノレポ構成。
