@@ -1,11 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Gauge, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const NAV_ITEMS = [
-  { href: "/", label: "デバイス一覧", icon: Gauge },
-  { href: "/admin/devices", label: "デバイス管理", icon: Settings },
-] as const;
+import { NAV_ITEMS } from "@/components/layout/nav-items";
 
 export function BottomNav() {
   const { pathname } = useLocation();

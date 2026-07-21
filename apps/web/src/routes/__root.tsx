@@ -1,6 +1,6 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
-import { MobileHeader } from "@/components/layout/mobile-header";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { Sidebar } from "@/components/layout/sidebar";
 
 export const Route = createRootRoute({
   component: RootLayout,
@@ -9,10 +9,12 @@ export const Route = createRootRoute({
 function RootLayout() {
   return (
     <div className="min-h-dvh">
-      <MobileHeader title="OndoLog" />
-      <main className="pb-[60px] md:pb-0">
-        <Outlet />
-      </main>
+      <Sidebar />
+      <div className="md:pl-60">
+        <main className="pb-[60px] md:pb-0">
+          <Outlet />
+        </main>
+      </div>
       <BottomNav />
     </div>
   );
