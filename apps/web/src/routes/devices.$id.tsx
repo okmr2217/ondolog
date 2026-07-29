@@ -8,6 +8,26 @@ import { MobileHeader } from "@/components/layout/mobile-header";
 import { DeviceChart } from "@/components/device-chart";
 import { useDevices } from "@/hooks/use-devices";
 import { PERIODS, useMeasurements, type Period } from "@/hooks/use-measurements";
+import { getComfortAdvice, type ComfortLevel } from "@/lib/comfort";
+import { cn } from "@/lib/utils";
+
+const COMFORT_LEVEL_LABEL: Record<ComfortLevel, string> = {
+  cold: "寒い",
+  cool: "涼しい",
+  comfortable: "快適",
+  slightly_hot: "やや暑い",
+  hot: "暑い",
+  very_hot: "非常に暑い",
+};
+
+const COMFORT_LEVEL_CLASS: Record<ComfortLevel, string> = {
+  cold: "text-blue-600",
+  cool: "text-sky-600",
+  comfortable: "text-emerald-600",
+  slightly_hot: "text-amber-600",
+  hot: "text-orange-600",
+  very_hot: "text-red-600",
+};
 
 export const Route = createFileRoute("/devices/$id")({
   component: DeviceDetailPage,
@@ -21,6 +41,8 @@ function DeviceDetailPage() {
   const device = devices.find((d) => d.id === id);
 
   const { measurements, isLoading: isChartLoading, error: chartError } = useMeasurements(id, period);
+
+  const advice = device?.latest ? getComfortAdvice(device.latest.temperature, device.latest.humidity) : null;
 
   return (
     <>
@@ -63,6 +85,27 @@ function DeviceDetailPage() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="sm:max-w-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-normal text-muted-foreground">快適度</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isDeviceLoading ? (
+              <Skeleton className="h-8 w-24" />
+            ) : advice ? (
+              <>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-semibold">{advice.di.toFixed(1)}</span>
+                  <span className={cn("text-sm font-medium", COMFORT_LEVEL_CLASS[advice.level])}>{COMFORT_LEVEL_LABEL[advice.level]}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">{advice.message}</p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">データがありません</p>
+            )}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
