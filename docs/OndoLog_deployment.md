@@ -69,7 +69,7 @@ npx wrangler deploy
 Web閲覧ルート（`/`, `/devices/:id`, `/admin/devices`など）は本人のみアクセス可能にする。一方、以下の2つはAccessの保護対象から除外し、それぞれ別の方式で守る。
 
 - デバイスからの計測データ送信エンドポイント（`POST /api/devices/:deviceId/measurements`）— APIキー認証のみで完結させる必要がある
-- ヘルスチェック（`GET /api/healthz`）— 設計上「認証不要」（`OndoLog_software_design.md` §5）。UptimeRobotなど外部監視サービスから叩けるようにするため、対話的ログインを要求してはいけない
+- ヘルスチェック（`GET /api/health`）— 設計上「認証不要」（`OndoLog_software_design.md` §5）。UptimeRobotなど外部監視サービスから叩けるようにするため、対話的ログインを要求してはいけない
 
 Cloudflare Accessはパスパターンごとにアプリケーションを分けて設定できるため、以下の順で3つのアプリケーションを作成する。
 
@@ -84,8 +84,8 @@ Cloudflare Accessはパスパターンごとにアプリケーションを分け
 ### 6.2 ヘルスチェックの除外（先に作成）
 
 1. 同様に **Add an application** → **Self-hosted**
-2. Application name: 例 `OndoLog Healthz`
-3. Application domain: `ondolog.paritto.dev`、Path: `/api/healthz`
+2. Application name: 例 `OndoLog Health`
+3. Application domain: `ondolog.paritto.dev`、Path: `/api/health`
 4. Policies: Action **Bypass** のポリシーを1つ作成
 5. 保存
 
@@ -100,18 +100,18 @@ Cloudflare Accessはパスパターンごとにアプリケーションを分け
    - 追加のIdP連携は不要。デフォルトのOne-time PIN（メールにワンタイムコードが届く方式）で認証できる
 6. 保存
 
-より限定的なパスパターン（6.1・6.2）が優先されるため、先にBypassアプリケーションを2つ作ってから全体保護アプリケーションを作る順序が重要。設定後は`/api/devices/*/measurements`と`/api/healthz`以外の全パスがCloudflareのログイン画面（One-time PIN）を経由するようになる。
+より限定的なパスパターン（6.1・6.2）が優先されるため、先にBypassアプリケーションを2つ作ってから全体保護アプリケーションを作る順序が重要。設定後は`/api/devices/*/measurements`と`/api/health`以外の全パスがCloudflareのログイン画面（One-time PIN）を経由するようになる。
 
 ### 6.4 動作確認
 
 - ブラウザで`https://ondolog.paritto.dev/`を開き、Cloudflareのログイン画面（メールアドレス入力→ワンタイムコード）が出ることを確認
 - 登録したメールアドレス以外では拒否されることを確認
 - デバイス側（ファームウェア）からの`POST /api/devices/:deviceId/measurements`がAccessのログイン画面を経由せず、APIキーのみで通ることを確認
-- `curl https://ondolog.paritto.dev/api/healthz` がAccessのログイン画面を経由せず、`{"status":"ok"}`を直接返すことを確認（UptimeRobot等の外部監視で使う想定）
+- `curl https://ondolog.paritto.dev/api/health` がAccessのログイン画面を経由せず、`{"status":"ok","checks":{"db":"ok"}}`を直接返すことを確認（UptimeRobot等の外部監視で使う想定）。D1に接続できない場合は503と`{"status":"error","checks":{"db":"error"}}`を返す
 
 ## 7. デプロイ後の動作確認チェックリスト
 
-- [x] `GET /api/healthz` が200を返す
+- [x] `GET /api/health` が200を返す
 - [x] `/`, `/devices/:id`, `/admin/devices` がSPAとして正しく表示される（直接アクセスでも404にならない）
 - [x] `GET /api/devices` が空配列または登録済みデバイスを返す
 - [x] Cron Trigger（`*/10 * * * *`）がCloudflareダッシュボードの「Triggers」に表示されている
