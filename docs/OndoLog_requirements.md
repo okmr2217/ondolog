@@ -56,7 +56,7 @@ APIサーバー（Hono）とWebアプリ（Vite + React）は単一のCloudflare
 | `/api/devices` | GET | 登録デバイス一覧取得（Web用、論理削除済みは除く） | 同上 |
 | `/api/devices` | POST | デバイス新規登録・APIキー発行（管理画面用） | Cloudflare Access（Web経由） |
 | `/api/devices/:id` | DELETE | デバイスの論理削除・無効化（管理画面用、物理削除は行わない） | Cloudflare Access（Web経由） |
-| `/api/healthz` | GET | ヘルスチェック | 不要 |
+| `/api/health` | GET | ヘルスチェック | 不要 |
 
 - バリデーション: 温度・湿度の数値範囲チェックを行う（CO2は廃止のため対象外）。バリデーションエラーはフィールド単位のエラー情報（`fieldErrors`）を返す形式とする。
 - タイムスタンプはサーバー側で付与（デバイスのRTC依存を避けるため）。

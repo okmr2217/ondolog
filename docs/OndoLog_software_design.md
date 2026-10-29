@@ -55,7 +55,7 @@ ondolog/
 │   │   │   │                      # GET  /api/measurements
 │   │   │   │                      # GET  /api/measurements/latest
 │   │   │   ├── devices.ts         # GET/POST /api/devices, DELETE /api/devices/:id
-│   │   │   └── healthz.ts         # GET /api/healthz
+│   │   │   └── health.ts          # GET /api/health
 │   │   ├── middleware/
 │   │   │   └── apiKeyAuth.ts      # X-API-Keyヘッダー検証 → api_key_hashと照合するミドルウェア
 │   │   ├── db/
@@ -191,7 +191,9 @@ ondolog/
 | `/api/devices` | GET | 登録デバイス一覧取得（`is_active = true`のみ） | Cloudflare Access |
 | `/api/devices` | POST | デバイス新規登録・APIキー発行 | Cloudflare Access |
 | `/api/devices/:id` | DELETE | デバイス論理削除（`is_active = false`に更新） | Cloudflare Access |
-| `/api/healthz` | GET | ヘルスチェック | 不要 |
+| `/api/health` | GET | ヘルスチェック | 不要 |
+
+- `/api/health`はD1へ`SELECT 1`を投げて疎通を確認する。成功時は200 `{"status":"ok","checks":{"db":"ok"}}`、失敗時は503 `{"status":"error","checks":{"db":"error"}}`（エラー詳細は未認証公開のためレスポンスに含めずログのみ）
 
 - Cloudflare Accessはホスト＋パスパターン単位で適用されるため、`/api/devices/:deviceId/measurements`（デバイス送信用）のみAccessをバイパスしてAPIキー認証にする構成
 - バリデーション（温度・湿度の数値範囲チェック）、タイムスタンプのサーバー側付与は継続
