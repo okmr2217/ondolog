@@ -116,3 +116,20 @@ Cloudflare Accessはパスパターンごとにアプリケーションを分け
 - [x] `GET /api/devices` が空配列または登録済みデバイスを返す
 - [x] Cron Trigger（`*/10 * * * *`）がCloudflareダッシュボードの「Triggers」に表示されている
 - [x] Cloudflare Access設定後、Web閲覧ルートが認証なしでは開けないことを確認
+
+## 8. 自動デプロイ（GitHub Actions）
+
+`main`ブランチへのpush（PRのマージ）で`.github/workflows/deploy.yml`が走り、「Webビルド → リモートD1マイグレーション → `wrangler deploy`」を実行する。§4の手順と同じ内容。GitHubのActionsタブから`workflow_dispatch`で手動実行もできる。
+
+ブランチ運用: 作業ブランチ → `development` → `main`の順にPRでマージする。`main`へのマージが本番デプロイになる。
+
+### 8.1 初回に必要な設定
+
+GitHubリポジトリの **Settings → Secrets and variables → Actions → Repository secrets** に以下を登録する。未登録の間はワークフローが認証エラーで失敗する（デプロイはされない）。
+
+| 名前 | 内容 |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Cloudflareのダッシュボード → My Profile → API Tokens で発行。**Edit Cloudflare Workers** テンプレートに加え、**Account → D1 → Edit** 権限を付与する |
+| `CLOUDFLARE_ACCOUNT_ID` | `wrangler whoami`、またはダッシュボードのWorkers & Pages概要ページで確認 |
+
+`RESEND_API_KEY`はWorker側のシークレットとして設定済みのため、GitHub側には登録不要（`wrangler deploy`で上書きされない）。
